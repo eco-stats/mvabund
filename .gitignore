@@ -178,3 +178,8 @@ ignore/
 /Meta/
 docs
 mvabund.Rproj
+
+## R specific build files
+src/*.o
+src/*.dll
+src/*.so
