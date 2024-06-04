@@ -20,6 +20,7 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_spmatrix.h>
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_rng.h>
@@ -30,10 +31,13 @@
 
 #include <sys/time.h>
 #include <time.h>
-
+//#include <R_ext/Rdynload.h>
+#include <unordered_map>
 // rmv.h
 #include <gsl/gsl_eigen.h>
 #include <gsl/gsl_sf_gamma.h>
+#include <gsl/gsl_splinalg.h>
+#include "utility.h"
 
 // return status
 #define SUCCESS 0
@@ -105,6 +109,7 @@
 #define RHO 0.5
 #define ALFA 0.05
 #define MAXLINELEN 256
+#define NZMAX 100000
 
 typedef struct MethodStruc {
   // hypo test methods
@@ -157,6 +162,10 @@ typedef struct RegressionMethod {
   unsigned int maxiter, maxiter2;
   unsigned int n; // used in binomial regression
   unsigned int warning;
+
+	unsigned int test;//for test
+	unsigned int resamp;
+
 } reg_Method;
 
 // ManyLM related
@@ -237,6 +246,7 @@ public:
   glm(const reg_Method *mm);
   virtual ~glm();
   void initialGlm(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B);
+	void updateGlmInfo(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O, gsl_matrix *B);
   void releaseGlm(void);
   virtual int regression(gsl_matrix *Y, gsl_matrix *X, gsl_matrix *O,
                          gsl_matrix *B) = 0;
@@ -249,6 +259,10 @@ public:
   const reg_Method *mmRef;
   gsl_matrix *Yref;
   gsl_matrix *Xref;
+  gsl_spmatrix *Xrefsp;
+  gsl_spmatrix *XrefspT;
+  BetaSpmSol* spms_;
+
   gsl_matrix *Oref;
   // return properties
   gsl_matrix *Beta;
@@ -269,18 +283,21 @@ public:
   unsigned int maxiter, maxiter2;
   double eps, mintol, maxtol, maxth;
   unsigned int nRows, nVars, nParams;
+
+	std::unordered_map<double, double> diagamma_map_;
+  std::unordered_map<double, double> trigamma_map_;
   // private:
   // abstract
-  virtual double link(double) const = 0;
-  virtual double invLink(double) const = 0;
-  virtual double LinkDash(double) const = 0;
-  virtual double weifunc(double, double) const = 0;
-  virtual double varfunc(double, double) const = 0;
-  virtual double llfunc(double, double, double) const = 0;
-  virtual double devfunc(double, double, double) const = 0;
-  virtual double pdf(double, double, double) const = 0;
-  virtual double cdf(double, double, double) const = 0;
-  virtual double cdfinv(double, double, double) const = 0;
+  virtual  double link(double) const = 0;
+  virtual  double invLink(double) const = 0;
+  virtual  double LinkDash(double) const = 0;
+  virtual  double weifunc(double, double) const = 0;
+  virtual  double varfunc(double, double) const = 0;
+  virtual  double llfunc(double, double, double) const = 0;
+  virtual  double devfunc(double, double, double) const = 0;
+  virtual  double pdf(double, double, double) const = 0;
+  virtual  double cdf(double, double, double) const = 0;
+  virtual  double cdfinv(double, double, double) const = 0;
   virtual double genRandist(double, double) const = 0;
 };
 
@@ -296,6 +313,8 @@ public: // public functions
   }
   int EstIRLS(gsl_matrix *, gsl_matrix *, gsl_matrix *, gsl_matrix *, double *);
   int betaEst(unsigned int id, unsigned int iter, double *tol, double a);
+	//int betaEstSp(unsigned int id, unsigned int iter, double *tol, double a);
+
   double getDisper(unsigned int id, double th) const;
   int update(gsl_vector *bj, unsigned int id);
   int predict(gsl_vector_view bj, unsigned int id, double a);
@@ -305,27 +324,27 @@ public: // public functions
 
   //    private:
   // Log-link and property functions
-  double link(double mui) const { return log(mui); }
-  double invLink(double etai) const { return exp(etai); }
-  double LinkDash(double mui) const { return 1 / MAX(mui, mintol); }
-  double weifunc(double mui, double a) const { return mui; }
-  double varfunc(double mui, double a) const { return mui; }
-  double llfunc(double yi, double mui, double a) const {
+   double link(double mui) const { return log(mui); }
+   double invLink(double etai) const { return exp(etai); }
+   double LinkDash(double mui) const { return 1 / MAX(mui, mintol); }
+   double weifunc(double mui, double a) const { return mui; }
+   double varfunc(double mui, double a) const { return mui; }
+   double llfunc(double yi, double mui, double a) const {
     if (yi == 0)
       return 2 * (-mui);
     else
       return 2 * (yi * log(mui) - mui - gsl_sf_lngamma(yi + 1));
   }
-  double devfunc(double yi, double mui, double a) const {
+   double devfunc(double yi, double mui, double a) const {
     return 2 * (yi * log(MAX(1, yi) / mui) - yi + mui);
   }
-  double pdf(double yi, double mui, double a) const {
+   double pdf(double yi, double mui, double a) const {
     return Rf_dpois(yi, mui, FALSE);
   }
-  double cdf(double yi, double mui, double a) const {
+   double cdf(double yi, double mui, double a) const {
     return Rf_ppois(yi, mui, TRUE, FALSE);
   }
-  double cdfinv(double u, double mui, double a) const {
+   double cdfinv(double u, double mui, double a) const {
     return Rf_qpois(u, mui, TRUE, FALSE);
   }
   double genRandist(double mui, double a) const { return Rf_rpois(mui); }
@@ -349,15 +368,15 @@ public:
   // EX = shape / rate = mui, VarX = shape/(rate^2)
   // Var (mui) =  mui^2/shape
   // A here is the estimates shape parameter
-  double varfunc(double mui, double a) const { return (mui * mui) / a; }
+   double varfunc(double mui, double a) const { return (mui * mui) / a; }
   // deviance residual HELP I am not sure if this is right.
   // see slide 28 of http://www.imm.dtu.dk/~hmad/GLM/slides/lect06.pdf
-  double devfunc(double yi, double mui, double a) const {
+   double devfunc(double yi, double mui, double a) const {
     return -2 * (log(yi == 0 ? 1 : yi / MAX(mintol, mui)) -
                  (yi - mui) / MAX(mintol, mui));
   }
   // a = k = shape
-  double llfunc(double yi, double mui, double a) const {
+   double llfunc(double yi, double mui, double a) const {
     return 2 * ((a - 1) * log(yi) - (yi * a) / mui +
                 a * (log(a) - log(MAX(mintol, mui))) - gsl_sf_lngamma(a));
   }
@@ -366,13 +385,13 @@ public:
   // according to
   // http://dirk.eddelbuettel.com/code/rcpp/html/Rmath_8h_source.html Rf_ ...
   // takes the scale parameter and we use rate
-  double pdf(double yi, double mui, double a) const {
+   double pdf(double yi, double mui, double a) const {
     return Rf_dgamma(yi, a, mui / MAX(mintol, a), FALSE);
   }
-  double cdf(double yi, double mui, double a) const {
+   double cdf(double yi, double mui, double a) const {
     return Rf_pgamma(yi, a, mui / MAX(mintol, a), TRUE, FALSE);
   }
-  double cdfinv(double ui, double mui, double a) const {
+   double cdfinv(double ui, double mui, double a) const {
     return Rf_qgamma(ui, a, mui / MAX(mintol, a), TRUE, FALSE);
   }
   double genRandist(double mui, double a) const {
@@ -389,26 +408,26 @@ public: // public functions
   BinGlm(const reg_Method *);
   virtual ~BinGlm();
   //    private: // property functions
-  double link(double mui) const // pi=mui/n
+   double link(double mui) const // pi=mui/n
   {
     if (speclink == CLOGLOG)
       return log(-log(1 - mui));
     else // default logit
       return log(mui / (n - mui));
   }
-  double invLink(double ei) const {
+   double invLink(double ei) const {
     if (speclink == CLOGLOG)
       return MAX(mintol, MIN(1 - mintol, 1 - exp(-exp(ei))));
     else // default logit
       return n * exp(ei) / (1 + exp(ei));
   }
-  double LinkDash(double mui) const {
+   double LinkDash(double mui) const {
     if (speclink == CLOGLOG)
       return 1 / MAX(mintol, (mui - 1) * log(1 - mui));
     else // default logit
       return n / MAX(mintol, mui * (n - mui));
   }
-  double weifunc(double mui, double a) const {
+   double weifunc(double mui, double a) const {
     if (speclink == CLOGLOG)
       return ((1 - mui) * log(1 - mui)) * ((1 - mui) * log(1 - mui)) /
              MAX(mintol, (mui * (1 - mui)));
@@ -416,10 +435,10 @@ public: // public functions
       return mui * (1 - mui / n);
   }
   // others the same
-  double varfunc(double mui, double a) const {
+   double varfunc(double mui, double a) const {
     return mui * (1 - mui / n);
   } // n*pi*(1-pi)
-  double llfunc(double yi, double mui, double a) const {
+   double llfunc(double yi, double mui, double a) const {
     return 2 * ((yi > 0)
                     ? yi * log(mui / n)
                     : 0 + (yi < n) ? (n - yi) * log(1 - mui / n)
@@ -428,23 +447,20 @@ public: // public functions
                                                     gsl_sf_lngamma(n - yi + 1))
                                                  : 0);
   }
-  double devfunc(double yi, double mui, double a) const {
+   double devfunc(double yi, double mui, double a) const {
     return 2 * ((yi > 0) ? (yi * log(yi / mui))
                          : 0 + (yi < n) ? ((n - yi) * log((n - yi) / (n - mui)))
                                         : 0);
   }
-  double pdf(double yi, double mui, double a) const
-  //	        { if (n==1) return (yi<1)?(1-mui):mui;
+   double pdf(double yi, double mui, double a) const
   {
     return Rf_dbinom(yi, n, mui / n, FALSE);
   }
-  double cdf(double yi, double mui, double a) const
-  //                { if (n==1) return (yi<1)?(1-mui):1;
+   double cdf(double yi, double mui, double a) const
   {
     return Rf_pbinom(yi, n, mui / n, TRUE, FALSE);
   }
-  double cdfinv(double ui, double mui, double a) const
-  //                { if (n==1) return (ui<1)?0:1;
+   double cdfinv(double ui, double mui, double a) const
   {
     return (double)Rf_qbinom(ui, n, mui / n, TRUE, FALSE);
   }
@@ -469,7 +485,7 @@ public:
   // *nbinom( , size, prob, mu, )
   // size = th (dispersion)
   // prob = size/(size+mu)
-  double weifunc(double mui, double th) const {
+   double weifunc(double mui, double th) const {
     if (th == 0)
       return 0;
     else if (th > maxth)
@@ -477,7 +493,7 @@ public:
     else
       return MAX(mintol, mui * th / MAX(mui + th, mintol));
   }
-  double varfunc(double mui, double th) const {
+   double varfunc(double mui, double th) const {
     if (th == 0)
       return 0;
     else if (th > maxth)
@@ -485,8 +501,8 @@ public:
     else
       return mui + mui * mui / MAX(th, mintol);
   }
-  double llfunc(double yi, double mui, double th) const;
-  double devfunc(double yi, double mui, double th) const {
+   double llfunc(double yi, double mui, double th) const;
+   double devfunc(double yi, double mui, double th) const {
     if (th == 0)
       return 0;
     else if (th > maxth)
@@ -495,7 +511,7 @@ public:
       return 2 * (yi * log(MAX(1, yi) / mui) -
                   (yi + th) * log((yi + th) / (mui + th)));
   }
-  double pdf(double yi, double mui, double th) const {
+   double pdf(double yi, double mui, double th) const {
     if (th == 0)
       return 0;
     else if (th > maxth)
@@ -503,7 +519,7 @@ public:
     else
       return Rf_dnbinom(yi, th, th / (mui + th), FALSE);
   }
-  double cdf(double yi, double mui, double th) const {
+   double cdf(double yi, double mui, double th) const {
     if (th == 0)
       return 1;
     else if (th > maxth)
@@ -511,7 +527,7 @@ public:
     else
       return Rf_pnbinom(yi, th, th / (mui + th), TRUE, FALSE);
   }
-  double cdfinv(double ui, double mui, double th) const {
+   double cdfinv(double ui, double mui, double th) const {
     if (th == 0)
       return 0;
     else if (th > maxth)
@@ -533,6 +549,7 @@ public:
 
   double getfAfAdash(double th, unsigned int id, unsigned int limit);
   double thetaML(double th0, unsigned int id, unsigned int limit);
+  //double getfAfAdashMT(double th, unsigned int id, unsigned int limit);
 };
 
 // base test class
@@ -562,12 +579,14 @@ public:
   int anova(glm *, gsl_matrix *);
   void displayAnova(void);
 
+	void init_multthread(int );
+	int anova_mt(glm *, gsl_matrix *);
 private:
   int getBootID(void);
 
   // int geeCalc(glm *PtrAlt, glm *PtrNull, gsl_matrix *);
-  int GeeWald(glm *, gsl_matrix *, gsl_vector *);
-  int GeeScore(gsl_matrix *, glm *, gsl_vector *);
+  int GeeWald(glm *, gsl_matrix *, gsl_vector *, gsl_matrix *);
+  int GeeScore(gsl_matrix *, glm *, gsl_vector *, gsl_matrix *);
   int GeeLR(glm *PtrAlt, glm *PtrNull, gsl_vector *teststat);
 
   // int resampSmryCase(glm *, gsl_matrix *, GrpMat *, GrpMat *,
@@ -582,17 +601,19 @@ private:
   unsigned int nModels;
   gsl_rng *rnd;
   size_t *permid;     // only useful in permutation test
-  double lambda, eps; // intermediate shrinkage parameter
+  double eps; // intermediate shrinkage parameter
 
   // the following are used in geeCalc
   gsl_matrix *L; // only useful in Wald test
-  gsl_matrix *Rlambda;
+  //gsl_matrix *Rlambda;
   gsl_matrix *Wj;
   gsl_matrix *XBeta, *Sigma; // used in monte carlo simulation
   // double *mr, *sr; // mean and variance of model residuals
   //	    gsl_vector *mr;
 
   GrpMat *GrpXs; // group X0
+
+	int thread_num;
 };
 
 // io.cpp - input/output functions

@@ -1,3 +1,4 @@
+
 ###############################################################################
 # R user interface to anova test for comparing multivariate linear models
 # Author: Yi Wang (yi dot wang at computer dot org) and David Warton
@@ -16,7 +17,8 @@ anova.manyglm <- function(object, ...,
                     show.warning=FALSE,
                     rep.seed=FALSE,
                     bootID=NULL,
-                    keep.boot = FALSE) {
+                    keep.boot = FALSE, 
+										thread.num = parallel::detectCores()) {
 
     if (cor.type!="I" & test=="LR") {
         warning("The likelihood ratio test can only be used if correlation matrix of the abundances is is assumed to be the Identity matrix. The Wald Test will be used.")
@@ -70,8 +72,11 @@ anova.manyglm <- function(object, ...,
         eta <- object$linear.predictor
         Y <- object$fitted.values + object$residuals * log(eta)
      }
+    #B <- matrix(object$coefficients, nrow=nParam, ncol=nVars) 
+	  #todo if B is null
+    #if (is.null(B)) B<-matrix(0, nrow = nParam, ncol = nVars)
 
-    w <- object$weights
+		w <- object$weights
     if (is.null(w)) w  <- rep(1, times=nRows)
     else {
         if (!is.numeric(w))  stop("'weights' must be a numeric vector")
@@ -320,7 +325,7 @@ anova.manyglm <- function(object, ...,
     }
 
     ######## call resampTest Rcpp #########
-    val <- RtoGlmAnova(modelParam, testParams, Y, X, O, XvarIn, bootID, shrink.param)
+    val <- RtoGlmAnova(modelParam, testParams, Y, X, O, XvarIn, bootID, shrink.param, thread.num)
 
     # prepare output summary
     table <- data.frame(resdf, c(NA, val$dfDiff[ord]),
@@ -390,12 +395,10 @@ do_pairwise_comp <- function (what, anova_obj, manyglm_object, verbose = FALSE, 
     if (inherits(what, 'formula')) {
         if(attr(terms(what) , "response" ) != 0) stop('Formula for pairwise.comp must be onesided without a response. ie: "~ factor1:factor2"')
         # get a new matrix from this dataframe
-        mdf <- try(model.frame(what),silent=TRUE)
-        if(inherits(mdf, "try-error")) #if this didn't work, try looking in object environment
-          mdf <- model.frame(what, data=manyglm_object$data)
+        mdf <- model.frame(what)
         # add the column names, to the levels
         mdf <- lapply(colnames(mdf), function(x) paste(x, mdf[[x]], sep=':'))
-        # collapse all interactions into one factor level
+        # collapse all interactiions into one factor level
         what <- as.factor(Reduce(paste, mdf))
     }
     if (!is.factor(what)) what <- as.factor(what)
@@ -452,12 +455,8 @@ do_pairwise_comp <- function (what, anova_obj, manyglm_object, verbose = FALSE, 
         }
     }
 
-    # correct for NaN values:
-    observed_stats[is.na(observed_stats)] <- 0
-    resampled_stats[is.na(resampled_stats)] <- 1
-    
     # now we can start the step down procedure
-    # sort observed in decreasing order saving the indices
+    # sort observed in decreasing order saving the indicies
     # these indicies are our r_i (pg66 resamplng based multiple testing)
     # decreasing because we are using the test statistics and not the 
     observed_stats <- sort(observed_stats, index.return = T, decreasing = T)
@@ -498,4 +497,3 @@ do_pairwise_comp <- function (what, anova_obj, manyglm_object, verbose = FALSE, 
     rownames(pmat) <- comparison
     pmat
 }
-

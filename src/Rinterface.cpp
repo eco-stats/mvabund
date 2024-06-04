@@ -10,7 +10,10 @@
 extern "C" {
   #include "time.h"
 }
-
+#include "multi_thread.h"
+#include "profile.h"
+#include "Rcpp.h"
+#include <gperftools/profiler.h>
 using namespace Rcpp;
 
 // declare a dependency on the headers in the RcppGSL package;
@@ -73,10 +76,10 @@ List RtoAnovaCpp(const List &rparam, RcppGSL::Matrix &Y, RcppGSL::Matrix &X,
 // declare the function to be 'exported' to R
 // [[Rcpp::export]]
 List RtoGlmAnova(const List &sparam, const List &rparam, RcppGSL::Matrix &Y,
-                 RcppGSL::Matrix &X, RcppGSL::Matrix &O,
+                 RcppGSL::Matrix &X, RcppGSL::Matrix &O, 
                  RcppGSL::Matrix &isXvarIn,
                  Rcpp::Nullable<RcppGSL::Matrix> &bID,
-                 RcppGSL::Vector &lambda) {
+                 RcppGSL::Vector &lambda, int &thread_num) {
   // pass regression parameters
   reg_Method mm;
   mm.tol = as<double>(sparam["tol"]);
@@ -88,6 +91,8 @@ List RtoGlmAnova(const List &sparam, const List &rparam, RcppGSL::Matrix &Y,
   mm.maxiter = as<unsigned int>(sparam["maxiter"]);
   mm.maxiter2 = as<unsigned int>(sparam["maxiter2"]);
   mm.warning = as<unsigned int>(sparam["warning"]);
+	mm.test = as<unsigned int>(rparam["test_type"]);
+	mm.resamp = as<unsigned int>(rparam["resamp"]);
 
   // pass test parameters
   mv_Method tm;
@@ -99,6 +104,9 @@ List RtoGlmAnova(const List &sparam, const List &rparam, RcppGSL::Matrix &Y,
   tm.punit = as<unsigned int>(rparam["punit"]);
   tm.showtime = as<unsigned int>(rparam["showtime"]);
   tm.warning = as<unsigned int>(rparam["warning"]);
+  
+	//TimeDebug tmd = TimeDebug();			
+	//Rprintf("enter RtoGlm Anova %s\n", tmd.currentTime().c_str());
 
   unsigned int nRows = Y.nrow();
   unsigned int nVars = Y.ncol();
@@ -124,11 +132,12 @@ List RtoGlmAnova(const List &sparam, const List &rparam, RcppGSL::Matrix &Y,
   GammaGlm gfit(&mm);
   glm *glmPtr[4] = {&pfit, &nbfit, &binfit, &gfit};
   unsigned int mtype = mm.model - 1;
+  glmPtr[mtype]->initialGlm(Y, X, O, NULL);
   glmPtr[mtype]->regression(Y, X, O, NULL);
   //    glmPtr[mtype]->display();
 
   GlmTest myTest(&tm);
-  // Resampling indices
+	// Resampling indices
   if (bID.isNotNull()) {
     RcppGSL::Matrix m(bID);
     tm.nboot = m.nrow();
@@ -136,7 +145,8 @@ List RtoGlmAnova(const List &sparam, const List &rparam, RcppGSL::Matrix &Y,
   }
 
   // resampling test
-  myTest.anova(glmPtr[mtype], isXvarIn);
+	myTest.init_multthread(thread_num);
+  myTest.anova_mt(glmPtr[mtype], isXvarIn);
   //    myTest.displayAnova();
 
   // Timing
@@ -169,6 +179,8 @@ List RtoGlmAnova(const List &sparam, const List &rparam, RcppGSL::Matrix &Y,
   myTest.releaseTest();
   glmPtr[mtype]->releaseGlm();
   gsl_vector_free(tm.anova_lambda);
+	//Rcpp::Rcout<< " run time for RtoGlmAnova "<< tmd.elapsed_time() << "\n";
+	//Rprintf("exit RtoGlmAnova %s\n", tmd.currentTime().c_str());
 
   return rs;
 }
@@ -189,6 +201,7 @@ List RtoGlm(const List &rparam, RcppGSL::Matrix &Y, RcppGSL::Matrix &X,
   mm.maxiter = as<unsigned int>(rparam["maxiter"]);
   mm.maxiter2 = as<unsigned int>(rparam["maxiter2"]);
   mm.warning = as<unsigned int>(rparam["warning"]);
+	//TimeDebug tmd = TimeDebug();			
 
   // do stuff
   PoissonGlm pfit(&mm);
@@ -197,6 +210,7 @@ List RtoGlm(const List &rparam, RcppGSL::Matrix &Y, RcppGSL::Matrix &X,
   GammaGlm gfit(&mm);
   glm *glmPtr[4] = {&pfit, &nbfit, &lfit, &gfit};
   unsigned int mtype = mm.model - 1;
+  glmPtr[mtype]->initialGlm(Y, X, O, NULL);
   glmPtr[mtype]->regression(Y, X, O, NULL);
   // glmPtr[mtype]->display();
 
@@ -224,6 +238,7 @@ List RtoGlm(const List &rparam, RcppGSL::Matrix &Y, RcppGSL::Matrix &X,
 
   // clear objects
   glmPtr[mtype]->releaseGlm();
+	//Rcpp::Rcout<< " run time for RtoGlm "<< tmd.elapsed_time() << "\n";
 
   return rs;
 }
@@ -285,6 +300,7 @@ List RtoGlmSmry(const List &sparam,                   // model params list
   glm *glmPtr[4] = {&pfit, &nbfit, &lfit, &gfit};
   unsigned int mtype = mm.model - 1;
   // do the regression
+  glmPtr[mtype]->initialGlm(Y, X, O, NULL);
   glmPtr[mtype]->regression(Y, X, O, NULL);
   if (mm.warning) {
     // glmPtr[mtype]->display();
@@ -404,3 +420,19 @@ List RtoSmryCpp(const List &rparam, RcppGSL::Matrix &Y, RcppGSL::Matrix &X,
 
   return rs;
 }
+
+
+/* proflie function 
+// [[Rcpp::export]]
+SEXP start_profiler(SEXP str) {
+  ProfilerStart(as<const char*>(str));
+  return R_NilValue;
+}
+
+// [[Rcpp::export]]
+SEXP stop_profiler() {
+  ProfilerStop();
+  return R_NilValue;
+}
+
+ */

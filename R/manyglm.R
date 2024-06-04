@@ -25,7 +25,7 @@ manyglm <- function (formula,
 
 
 # start by converting any family objects that can be handled over to character strings
-if(inherits(family,"family")){
+if(class(family)=="family"){
   fam = family
   if(fam$family=="binomial" & fam$link=="cloglog")
     family="cloglog"
@@ -120,34 +120,14 @@ if (any(!is.wholenumber(Y)) & familynum != 4)
 # if composition=TRUE, put in long format and send back to manyglm
 if(composition==TRUE)
 {
-  # DW edits, 22/3/21, fixing issue #92
   # put in long format
-  if(names(mf[1])%in%names(data)) #if response is in data frame
-  {
-    #DW edits, 1/2/22, so works when data is a list (like Code Box 14.6 of Eco-Stats text)
-    whichResponse=which(names(data)==names(mf[1]))
-    if(inherits(data,"data.frame")==FALSE)
-      data = as.data.frame(data[-whichResponse])
-    dat = data.frame(c(Y), data[rep(1:N,p),])
-    names(dat)[1] = names(mf)[1]  #match name to original object
-    whichResponse=1
-    # end DW edits
-  }
-  else
-  {
-      if(inherits(data,"data.frame")==FALSE)
-        data = as.data.frame(data)
-      dat = data.frame(c(Y), data[rep(1:N,p),])
-      names(dat)[1] = names(mf)[1]  #match name to original object
-      whichResponse=1
-  }
+  dat = data.frame(c(Y), data[rep(1:N,p),])
+  names(dat)=c(names(mf)[1],names(data)) #match name to original object
   # make rows (row labels) and cols
   dat$rows = factor(rep(rownames(Y),p))
   dat$cols = factor(rep(colnames(Y),each=N))
   offset = rep(as.vector(model.offset(mf)),p) 
-  #check no dollar signs in formula or database, these screw everything up
-  names(dat)=gsub("$",".",names(dat),fixed=TRUE)
-  
+
   # get formula for long format with composition
   if(length(mf)==1) #if no predictors, write formula with no cols interaction:
   {
@@ -159,13 +139,13 @@ if(composition==TRUE)
   else
   {
     if(formula[[3]]==".") #if ~., expand to variable names
-      formula[[3]]=paste(names(mf[-whichResponse]),collapse="+")
+      formula[[3]]=paste(names(mf[-1]),collapse="+")
     formLong=formula
     # now add cols, rows and cols:[prev formula]:
     formLong[3] = paste0("cols+",as.character(formula[3]),"+rows+cols:(",as.character(formula[3]),")")
-    formLong[3] = gsub("$",".",formLong[3],fixed=TRUE)
     formLong=as.formula(paste0(formLong[2],formLong[1],formLong[3]))
   }
+
   z=manyglm(formLong, data=dat, block=dat$rows, composition=FALSE,
                  family=family, subset=subset, K=K, theta.method=theta.method,
                  model=model, x=x, y=y, qr=qr, cor.type=cor.type, 
@@ -173,10 +153,12 @@ if(composition==TRUE)
                  maxiter2=maxiter2, show.coef=show.coef, show.fitted=show.fitted,
                  show.residuals=show.residuals, show.warning=show.warning, 
                  offset=offset,... )
-    return(z)
+  return(z)
   } #end David edits, 10/4/19
 else{
   
+
+
   offset <- as.vector(model.offset(mf))
   
 # HELP this doesn't make sense, was there previously a familynum == 4 that was meaningful
@@ -204,7 +186,7 @@ if ( familynum==3) {
     ##################### BEGIN Estimation ###################
     # Obtain the Designmatrix.
     X <- model.matrix(mt, mf)
-
+    #print(X)
 # Obtain regression parameters
 if (familyname=="gaussian") {
     stop("Please use manylm to fit Gaussian")
@@ -306,6 +288,9 @@ else {
     names(z$aic) <- labAbund
     names(z$iter) <- labAbund
 
+    #for test purpose
+
+    
     z$data <- data
     z$stderr.coefficients <- sqrt(z$var.coefficients)
     dimnames(z$stderr.coefficients) <- list(colnames(X), labAbund)

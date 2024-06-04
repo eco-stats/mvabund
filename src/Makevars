@@ -10,4 +10,4 @@ PKG_CPPFLAGS = -I. -I../inst/include
 
 ## Use the R_HOME indirection to support installations of multiple R version
 ## And RcppGSL can tell us where GSL is installed so we get the libraries for linking
-PKG_LIBS = `$(R_HOME)/bin/Rscript -e "RcppGSL:::LdFlags()"`
+PKG_LIBS = `$(R_HOME)/bin/Rscript -e "RcppGSL:::LdFlags()"` -lpthread

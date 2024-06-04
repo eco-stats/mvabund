@@ -5,8 +5,8 @@ RtoAnovaCpp <- function(rparam, Y, X, isXvarIn, bID) {
     .Call('_mvabund_RtoAnovaCpp', PACKAGE = 'mvabund', rparam, Y, X, isXvarIn, bID)
 }
 
-RtoGlmAnova <- function(sparam, rparam, Y, X, O, isXvarIn, bID, lambda) {
-    .Call('_mvabund_RtoGlmAnova', PACKAGE = 'mvabund', sparam, rparam, Y, X, O, isXvarIn, bID, lambda)
+RtoGlmAnova <- function(sparam, rparam, Y, X, O, isXvarIn, bID, lambda, thread_num) {
+    .Call('_mvabund_RtoGlmAnova', PACKAGE = 'mvabund', sparam, rparam, Y, X, O, isXvarIn, bID, lambda, thread_num)
 }
 
 RtoGlm <- function(rparam, Y, X, O) {
