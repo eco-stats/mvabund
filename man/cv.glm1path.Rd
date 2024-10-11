@@ -71,7 +71,7 @@ Osborne, M.R., Presnell, B. and Turlach, B.A. (2000) On the LASSO and its dual. 
 David I. Warton <David.Warton@unsw.edu.au>
 }
 \seealso{
-\code{\link{glm1path}}, \\code{\link{glm1}}, \code{\link{glm}}, \code{\link{family}}
+\code{\link{glm1path}}, \code{\link{glm1}}, \code{\link{glm}}, \code{\link{family}}
 }
  %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%% %%%%%%%%%
 \examples{
