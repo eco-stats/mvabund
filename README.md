@@ -9,7 +9,7 @@
 [![License](http://img.shields.io/badge/license-LGPL%20%28%3E=%202.1%29-brightgreen.svg?style=flat)](http://www.gnu.org/licenses/gpl-2.0.html)
 [![CRAN](http://www.r-pkg.org/badges/version/mvabund)](https://CRAN.R-project.org/package=mvabund)
 [![Downloads](http://cranlogs.r-pkg.org/badges/mvabund?color=brightgreen)](https://www.r-pkg.org/pkg/mvabund)
-[![R-CMD-check](https://github.com/eco-stats/mvabund/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/eco-stats/mvabund/actions/workflows/R-CMD-check.yaml) 
+[![R-CMD-check](https://github.com/eco-stats/mvabund/actions/workflows/ci.yaml/badge.svg)](https://github.com/eco-stats/mvabund/actions/workflows/ci.yaml) 
 <!-- [![Codecov test
 coverage](https://codecov.io/gh/fontikar/mvabund/branch/master/graph/badge.svg)](https://app.codecov.io/gh/fontikar/mvabund?branch=master)
 <!-- badges: end -->
