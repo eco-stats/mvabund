@@ -425,7 +425,7 @@ do_pairwise_comp <- function (what, anova_obj, manyglm_object, verbose = FALSE, 
     # remove our factor from the design matrix, and the intercept...
     # to stop it from being over specified 
     mfact <- model.matrix(~ what )
-    X <- X[, - which(apply(X, 2, function(x) any(apply(mfact, 2, function(y) all(x == y)))))]
+    X <- as.matrix(X[, - which(apply(X, 2, function(x) any(apply(mfact, 2, function(y) all(x == y)))))])
     if (verbose) print('Starting pairwise comparison procedure:')
     # compute the levels and the the test statistics
     for (i in 1:(n_what - 1) ) {
@@ -435,7 +435,7 @@ do_pairwise_comp <- function (what, anova_obj, manyglm_object, verbose = FALSE, 
             if(verbose) print(paste('test', k, ':', l_what[i], 'vs', l_what[j]))
             # subset the dataset to only contain the levels we are interested in
             row_index <- which(what %in% l_what[c(i, j)])
-            subY <- Y[row_index, ]; subX <- X[row_index,]; subWhat <- what[row_index]
+            subY <- Y[row_index, ]; subX <- as.matrix(X[row_index,]); subWhat <- what[row_index]
 
             if(ncol(subX) == 0)
                 m <- manyglm(subY ~ subWhat, manyglm_object$family)
