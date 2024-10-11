@@ -11,6 +11,10 @@
 [![Downloads](http://cranlogs.r-pkg.org/badges/mvabund?color=brightgreen)](https://www.r-pkg.org/pkg/mvabund)
 [![Codecov test
 coverage](https://codecov.io/gh/fontikar/mvabund/branch/master/graph/badge.svg)](https://app.codecov.io/gh/fontikar/mvabund?branch=master)
+[![Codecov test
+coverage](https://codecov.io/gh/eco-stats/mvabund/branch/master/graph/badge.svg)](https://app.codecov.io/gh/eco-stats/mvabund?branch=master)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/mvabund)](https://CRAN.R-project.org/package=mvabund)
 <!-- badges: end -->
 
 The goal of mvabund is to provide tools for a **model-based approach**
