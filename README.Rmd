@@ -22,6 +22,7 @@ knitr::opts_chunk$set(
 [![](http://cranlogs.r-pkg.org/badges/last-month/mvabund)](https://cran.r-project.org/package=mvabund)
 [![Codecov test coverage](https://codecov.io/gh/eco-stats/mvabund/branch/master/graph/badge.svg)](https://app.codecov.io/gh/eco-stats/mvabund?branch=master)
 
+[![R-CMD-check](https://github.com/eco-stats/mvabund/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/eco-stats/mvabund/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of mvabund is to provide tools for a **model-based approach** to the analysis of multivariate abundance data in ecology [(Yi Wang et al. 2011)](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/j.2041-210X.2012.00190.x), in particular, testing hypothesis about the community-environment association. Abundance measures include counts, presence/absence data, ordinal or biomass data. 
