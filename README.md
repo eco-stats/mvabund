@@ -9,15 +9,14 @@
 [![License](http://img.shields.io/badge/license-LGPL%20%28%3E=%202.1%29-brightgreen.svg?style=flat)](http://www.gnu.org/licenses/gpl-2.0.html)
 [![CRAN](http://www.r-pkg.org/badges/version/mvabund)](https://CRAN.R-project.org/package=mvabund)
 [![Downloads](http://cranlogs.r-pkg.org/badges/mvabund?color=brightgreen)](https://www.r-pkg.org/pkg/mvabund)
-[![R-CMD-check](https://github.com/eco-stats/mvabund/actions/workflows/ci.yaml/badge.svg)](https://github.com/eco-stats/mvabund/actions/workflows/ci.yaml) 
-<!-- [![Codecov test
+[![Codecov test
 coverage](https://codecov.io/gh/fontikar/mvabund/branch/master/graph/badge.svg)](https://app.codecov.io/gh/fontikar/mvabund?branch=master)
 <!-- badges: end -->
 
 The goal of mvabund is to provide tools for a **model-based approach**
 to the analysis of multivariate abundance data in ecology [(Yi Wang et
-al. 2012)](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/j.2041-210X.2012.00190.x),
-in particular, testing hypotheses about the community-environment
+al. 2011)](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/j.2041-210X.2012.00190.x),
+in particular, testing hypothesis about the community-environment
 association. Abundance measures include counts, presence/absence data,
 ordinal or biomass data.
 
@@ -42,7 +41,7 @@ from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("eco-stats/mvabund")
+remotes::install_github("aliceyiwang/mvabund")
 
 library(mvabund)
 ```
@@ -54,7 +53,7 @@ website]() before launching into the `mvabund`. Alternatively, you can
 access the vignettes in R by:
 
 ``` r
-remotes::install_github("eco-stats/mvabund", build_vignettes = TRUE)
+remotes::install_github("aliceyiwang/mvabund", build_vignettes = TRUE)
 
 vignette("mvabund")
 ```
@@ -63,13 +62,12 @@ vignette("mvabund")
 
 ``` r
 citation("mvabund")
-#> 
 #> To cite package 'mvabund' in publications use:
 #> 
 #>   Wang Y, Naumann U, Eddelbuettel D, Wilshire J, Warton D (2022).
 #>   _mvabund: Statistical Methods for Analysing Multivariate Abundance
-#>   Data_. R package version 4.2.2,
-#>   <https://fontikar.github.io/mvabund/>.
+#>   Data_. R package version 4.2.1,
+#>   <https://CRAN.R-project.org/package=mvabund>.
 #> 
 #> A BibTeX entry for LaTeX users is
 #> 
@@ -77,26 +75,26 @@ citation("mvabund")
 #>     title = {mvabund: Statistical Methods for Analysing Multivariate Abundance Data},
 #>     author = {Yi Wang and Ulrike Naumann and Dirk Eddelbuettel and John Wilshire and David Warton},
 #>     year = {2022},
-#>     note = {R package version 4.2.2},
-#>     url = {https://fontikar.github.io/mvabund/},
+#>     note = {R package version 4.2.1},
+#>     url = {https://CRAN.R-project.org/package=mvabund},
 #>   }
 ```
 
 ### Spot a bug?
 
 Thanks for finding the bug! We would appreciate it if you can pop over
-to our [Issues page](https://github.com/eco-stats/mvabund/issues) and
+to our [Issues page](https://github.com/aliceyiwang/mvabund/issues) and
 describe how to reproduce the bug!
 
 ### Other resources
 
--   [Online
-    tutorial](https://environmentalcomputing.net/statistics/mvabund/)
-    for using `mvabund` for comparing species composition across
-    different habitats
--   [Video
-    introduction](http://eco-stats.blogspot.com/2012/03/introducing-mvabund-package-and-why.html)
-    to `mvabund`
+- [Online
+  tutorial](https://environmentalcomputing.net/statistics/mvabund/) for
+  using `mvabund` for comparing species composition across different
+  habitats
+- [Video
+  introduction](http://eco-stats.blogspot.com/2012/03/introducing-mvabund-package-and-why.html)
+  to `mvabund`
 
 ### mvabund in action
 
