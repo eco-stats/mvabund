@@ -1,7 +1,7 @@
 Package: mvabund
 Title: Statistical Methods for Analysing Multivariate Abundance Data
-Version: 4.2.7
-Date: 2024-10-11
+Version: 4.2.8
+Date: 2025-12-15
 Authors@R: c(person("Yi", "Wang", role = "aut"),
             person("Ulrike", "Naumann", role = "aut"),
             person("Dirk", "Eddelbuettel", role = "aut"),
@@ -35,7 +35,6 @@ LinkingTo:
     RcppGSL
 License: LGPL (>= 2.1)
 NeedsCompilation: yes
-RoxygenNote: 7.2.3
 Suggests:
     ecostats,
     knitr,
@@ -44,3 +43,4 @@ Suggests:
     testthat
 VignetteBuilder: knitr
 LazyData: true
+RoxygenNote: 7.3.2

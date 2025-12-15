@@ -43,7 +43,7 @@ Alternatively, you can install the **development** version of `mvabund` from [Gi
 
 ```{r, eval = FALSE}
 # install.packages("remotes")
-remotes::install_github("aliceyiwang/mvabund")
+remotes::install_github("eco-stats/mvabund")
 
 library(mvabund)
 ```
@@ -53,7 +53,7 @@ library(mvabund)
 We highly recommend you taking a good read of our vignette over at [our website]() before launching into the `mvabund`. Alternatively, you can access the vignettes in R by:
 
 ```{r, eval = FALSE}
-remotes::install_github("aliceyiwang/mvabund", build_vignettes = TRUE)
+remotes::install_github("eco-stats/mvabund", build_vignettes = TRUE)
 
 vignette("mvabund")
 ```
@@ -67,7 +67,7 @@ citation("mvabund")
 
 ### Spot a bug? 
 
-Thanks for finding the bug! We would appreciate it if you can pop over to our [Issues page](https://github.com/aliceyiwang/mvabund/issues) and describe how to reproduce the bug! 
+Thanks for finding the bug! We would appreciate it if you can pop over to our [Issues page](https://github.com/eco-stats/mvabund/issues) and describe how to reproduce the bug! 
 
 ### Other resources
 

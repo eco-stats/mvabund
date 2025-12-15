@@ -1,6 +1,7 @@
 
+## DW, 15/12/25: commented out C++11 at request from CRAN
 ## We want C++11
-CXX_STD = CXX11
+#CXX_STD = CXX11
 
 ## Header files from our package, RcppGSL comes in via LinkingTo: in DESCRIPTIPM
 PKG_CPPFLAGS = -I. -I../inst/include

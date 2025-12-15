@@ -1,4 +1,5 @@
 ## This assumes that the LIB_GSL variable points to working GSL libraries
-CXX_STD = CXX11
+## DW, 15/12/25: commented out C++11 at request from CRAN
+# CXX_STD = CXX11
 PKG_CPPFLAGS = -I$(LIB_GSL)/include -I. -I../inst/include
 PKG_LIBS=-L$(LIB_GSL)/lib -lgsl -lgslcblas 
