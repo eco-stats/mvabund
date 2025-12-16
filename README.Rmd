@@ -75,4 +75,4 @@ Thanks for finding the bug! We would appreciate it if you can pop over to our [I
 - [Video introduction](http://eco-stats.blogspot.com/2012/03/introducing-mvabund-package-and-why.html) to `mvabund`
 
 ### mvabund in action
-Check out the list of studies that uses `mvabund` in their analyses [here](https://scholar.google.com.au/scholar?cites=2455431763697722063&as_sdt=2005&sciodt=0,5&hl=en)
+Check out the list of studies that uses `mvabund` in their analyses [here](https://scholar.google.com.au/scholar?cites=2455431763697722063)

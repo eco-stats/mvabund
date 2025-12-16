@@ -101,4 +101,4 @@ describe how to reproduce the bug!
 ### mvabund in action
 
 Check out the list of studies that uses `mvabund` in their analyses
-[here](https://scholar.google.com.au/scholar?cites=2455431763697722063&as_sdt=2005&sciodt=0,5&hl=en)
+[here](https://scholar.google.com.au/scholar?cites=2455431763697722063)
