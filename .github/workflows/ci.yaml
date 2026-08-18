@@ -38,9 +38,9 @@ jobs:
         run: ./run.sh dump_logs
         if: failure()
 
-      #- name: Coverage
-      #  if: ${{ matrix.os == 'ubuntu-latest' }}
-      #  run: ./run.sh coverage
-      #  env:
-      #    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Coverage
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: ./run.sh coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
